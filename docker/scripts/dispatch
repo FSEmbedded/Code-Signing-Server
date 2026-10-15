@@ -1,0 +1,51 @@
+#!/bin/bash
+
+###############################################################################
+# This script contains the API exposed for the client login. It allows for five
+# commands:
+# - list                        lists all files currently in the /output/area
+# - clean                       removes all files from /staging/ and /output/
+# - sign <CPU_ID> <FILENAME>    invokes sign-and-serve.sh as signer which signs
+#                               one image in /staging/ for a certain CPU.
+# - scp -t /staging/            Allows client to provide files through scp into
+#                               the /staging/ directory for further processing
+# - scp -f /output/<filename>   Allows client to retrive files from the 
+#                               /output/ area through scp.
+###############################################################################
+
+case "$SSH_ORIGINAL_COMMAND" in
+        "list")
+                cd /output
+                find -maxdepth 1 -type f -printf '%f '
+                ;;
+        "clean")
+                cd /staging
+                rm -rf *
+                cd /output
+                rm -rf *
+                ;;
+        sign\ *)
+                read -r COMMAND SIGNING_CPU IMAGE <<< "$SSH_ORIGINAL_COMMAND"
+                if [ -z $SIGNING_CPU ] || [ -z $IMAGE ]; then
+                        echo Either SIGNING_CPU or IMAGE where empty, below the values:
+                        echo "SIGNING_CPU: $SIGNING_CPU"
+                        echo "IMAGE:       $IMAGE"
+                        exit 1
+                fi
+                # Invoke privileged signing tasks
+                sudo -u signer /tools/sign-and-serve.sh ${SIGNING_CPU} ${IMAGE}
+                ;;
+        "scp -t /staging/")
+                exec /usr/bin/scp -t /staging/
+                ;;
+        "scp -f /output/"*)
+                FILE="${SSH_ORIGINAL_COMMAND#scp -f /output/}"
+                if [ ! -f /output/$FILE ]; then
+                        echo "$FILE does not exist"
+                        exit 1
+                fi
+                exec /usr/bin/scp -f "/output/$FILE"
+                ;;
+        *)
+                echo No such command: "$SSH_ORIGINAL_COMMAND"
+esac
