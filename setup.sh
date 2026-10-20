@@ -125,7 +125,28 @@ function delete()
 
 function usage() 
 {
-	echo "Usage: ./signing-server-setup-devel.sh <start|stop|delete|usage>"
+	echo "Usage: ./setup.sh (--start [cst-dir <PATH>] [fs-sb-tool-dir <PATH>] [ssh-pub-key <PATH>] | --stop | --delete)"
+	echo ""
+	echo "Create, Start, Stop or delete a reference code signing server"
+	echo ""
+	echo "Arguments:"
+	echo "        --start                 Start (and create) a Container"
+	echo "        --stop                  Stop a running container"
+	echo "        --delete                Delete (and stop) the exisiting Container"
+	echo ""
+	echo "        CAUTION! Deleting a container, also deletes embedded certificates"
+	echo ""
+	echo "Options for --start:"
+	echo "        cst-dir <PATH>          Path to a unacked and unused IMX Code Signing Tool"
+	echo "        fs-sb-tool-dir <PATH>   Path to the F&S Secure Boot Tool directory"
+	echo "        ssh-pub-key <PATH>      Path to a ssh public key, known by the Yocto build container"
+	echo ""
+	echo "Description:"
+	echo "        One of the Arguments must be specified when running the command. When using --start and no Container"
+	echo "        exists, one will be created. The Opions of --start copy the directories and files into a subdirectory"
+	echo "        for creation. If they have been copied before, the options can be ommited. During first use they need"
+	echo "        to be set. --delete will delete the container including all its files, if the container is running it"
+	echo "        will stop it before like --stop. "
 }
 
 function process_debug()
